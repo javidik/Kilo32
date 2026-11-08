@@ -12,7 +12,7 @@
     "socksPort": 19050,
     "bootstrapTimeoutMs": 240000,
     "bridges": [],
-    "bridgeFeedUrl": "https://raw.githubusercontent.com/scriptzteam/Tor-Bridges-Collector/master/bridges-obfs4",
+    "bridgeFeedUrl": "",
     "exclusive": true
   },
   "cooldownSeconds": 15,
