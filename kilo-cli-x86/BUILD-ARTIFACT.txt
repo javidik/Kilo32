@@ -1,0 +1,83 @@
+Kilo Code CLI 7.8.17 — Windows 10 x86 (1809+) / IA-32
+
+Runtime: Node.js 22.23.0 win-x86
+Architecture: PE32 / Intel 80386
+Package: portable ZIP + install.bat / install.ps1
+Installed command: kilo (kilo.cmd on PATH)
+Install target: %LOCALAPPDATA%\Programs\KiloCLI
+
+Interactive TUI port:
+- OpenTUI native runtime: @opentui/core-win32-ia32/opentui.dll (PE32)
+- Koffi native module: win32_ia32 only
+- IA-32 node-pty / ConPTY and Parcel watcher native modules
+- Node worker_threads bridge for Kilo TUI/indexing/session workers
+- SolidJS Node export patched to use the client/web runtime, not SSR server runtime
+- Node/Bun compatibility layer
+- No x64 native modules included
+
+Installation:
+- install.bat invokes install.ps1 without requiring administrator rights
+- install.ps1 copies the complete runtime and adds the install directory to the current user's PATH
+- kilo.cmd starts the bundled 32-bit Node runtime and forwards all CLI arguments
+- uninstall.ps1 removes the installed application and PATH entry, leaving user data untouched
+
+Verified under Wine / server test environment:
+- Node.js x86 reports v22.23.0
+- kilo.cmd --no-proxy --version works from a different working directory with the install directory on PATH
+- CLI --help and subcommand help display the command and option reference
+- models command returned the Kilo model catalogue
+- local serve command started and listened on 127.0.0.1
+- Kilo Gateway model request returned a response through the configured proxy in a previous E2E smoke test
+- OpenTUI DLL, Koffi, node-pty and watcher modules are PE32 IA-32
+- TUI startup remained active during a 12-second Wine smoke test without a captured startup exception
+- OpenTUI core ESM import, Koffi, Parcel watcher and IA-32 node-pty native modules loaded under Wine
+- kilo.cmd --no-proxy --version, --help, models --help and serve --help passed; PATH lookup from a different working directory passed
+- TUI worker RPC startup and terminal initialization were exercised in previous tests
+- SolidJS package fallback entry points are patched to the client runtimes (solid.js/solid.cjs and web.js/web.cjs); Node conditional exports also resolve to the client runtimes
+- ZIP integrity and split-part SHA-256 were verified
+
+Not yet verified:
+- Running install.ps1 on a physical Windows x86 computer (Windows PowerShell is unavailable in the Wine test prefix)
+- Full visual/keyboard TUI acceptance on physical Windows x86
+- node-pty ConPTY child-process round trip under Wine; this test environment did not provide a reliable result
+- A successful HTTP health probe of the Wine-hosted local server (the service started, but Wine networking did not allow the probe to be confirmed)
+
+Scope:
+- This is the Kilo CLI port, not the Kilo Desktop/Electron application.
+- The separate Kilo-Setup-x64.exe present in the source workspace is Desktop 0.1.15, not this CLI package.
+
+Local proxy adapter:
+- proxy/manager.cjs validates local HTTP/HTTPS proxy configuration and waits for its TCP endpoint
+- proxy/launcher.cjs starts optional local proxy process, injects HTTP_PROXY/HTTPS_PROXY, runs Kilo, then stops the child process
+- proxy/config.json ships enabled by default with Tor; config.example.json contains a placeholder local password
+- HTTP CONNECT supported; SOCKS5 requires a local HTTP CONNECT bridge
+- adapter smoke-tested on host Node and bundled Node under Wine; physical Windows x86 validation remains outstanding
+
+Embedded KiloProxyPool (Node.js, no Python dependency):
+- Local loopback listener with Basic client authentication (HTTP 407 for unauthenticated clients)
+- Upstream pool: HTTP, HTTPS, SOCKS5, SOCKS5h; rotation, failover, exponential cooldown and success reset
+- HTTP CONNECT tunnelling and HTTP forwarding; local pool lifecycle tied to kilo.cmd
+- No owner-server endpoint or credentials included; shipped config enables Tor and has an empty upstream pool
+- Host smoke tests passed: authenticated CONNECT via mock SOCKS5h upstream and unauthenticated rejection
+- SOCKS5 upstream username/password authentication not yet supported; physical Windows x86 acceptance remains outstanding
+
+Embedded Tor + KiloProxyPool:
+- Official Tor Expert Bundle 16.0 / Tor 0.4.9.15 for Windows i686 (PE32), signature verified with Tor Browser Developers signing key
+- Bundled tor.exe, lyrebird.exe (pluggable transports), conjure-client.exe, GeoIP and GeoIPv6 databases
+- Tor starts with Kilo, waits for 100% bootstrap, exposes SOCKS5h on loopback and is stopped with Kilo
+- Tor SOCKS5h is automatically included as an upstream in the local authenticated proxy pool
+- Optional static bridges and weekly HTTPS bridge-feed refresh with cache and rollback on failed Tor restart
+- No owner-server proxy endpoint, credentials or private bridge list included; Tor is enabled in shipped config with placeholder local authentication
+- Tor binary version checked under Wine; full Tor network bootstrap and physical Windows x86 acceptance still require end-to-end testing
+
+Tor distribution details:
+- Source archive: Tor Expert Bundle 16.0, Windows i686
+- SHA-256: 24036933df360e6581e26653eccb9f3d069ab1f5e0aa5b80e716cbf6030f84dc
+- OpenPGP signature: verified as Tor Browser Developers signing key (fingerprint EF6E286DDA85EA2A4BA7DE684E2C6E8793298290)
+- Tor configuration parser accepted generated torrc under Wine; initial network bootstrap on the build server did not reach 100% within 180 seconds, so end-to-end Tor circuit is not certified in this environment
+
+Repository publication notes:
+- Embedded proxy/config.json sanitized: Tor enabled, no owner upstreams or credentials.
+- Runtime bridge cache, Tor state, lock, generated torrc and transient config excluded.
+- Bridge feed cache lifetime is 7 days; updater polls every 6 hours and applies changed bridge sets.
+- Full physical Windows x86 TUI and Tor-network acceptance remains outstanding.

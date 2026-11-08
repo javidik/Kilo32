@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "listen": "127.0.0.1",
+  "port": 17890,
+  "clientAuth": {
+    "username": "kilo",
+    "password": "SET_A_LOCAL_PASSWORD"
+  },
+  "upstreams": [],
+  "tor": {
+    "enabled": true,
+    "socksPort": 19050,
+    "bootstrapTimeoutMs": 240000,
+    "bridges": [],
+    "bridgeFeedUrl": "https://raw.githubusercontent.com/scriptzteam/Tor-Bridges-Collector/master/bridges-obfs4",
+    "exclusive": true
+  },
+  "cooldownSeconds": 15,
+  "maxCooldownSeconds": 300,
+  "connectTimeoutMs": 6000,
+  "startupTimeoutMs": 12000,
+  "noProxy": "localhost,127.0.0.1,::1"
+}

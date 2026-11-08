@@ -1,0 +1,7 @@
+proxy/config.json
+proxy/config.runtime.json
+proxy/tor/data/bridge-cache.json
+proxy/tor/data/state
+proxy/tor/data/lock
+proxy/tor/torrc.generated
+*.log
