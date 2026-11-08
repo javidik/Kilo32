@@ -16,10 +16,17 @@ if (-not (Test-Path -LiteralPath $sumFile -PathType Leaf)) {
     throw "SHA256SUM file not found: $sumFile"
 }
 
-$expected = (Get-Content -LiteralPath $sumFile -Raw).Trim().ToLowerInvariant()
-if ($expected -notmatch '^[0-9a-f]{64}$') {
-    throw "Invalid SHA256SUM content: $expected"
+# SHA256SUM file may be in either format:
+#   1. Pure hex (64 chars) on a single line
+#   2. sha256sum CLI format: "<hex>  <filename>"  (two spaces + filename)
+# Extract the first 64-char hex token, ignore everything after it.
+$sumContent = Get-Content -LiteralPath $sumFile -Raw
+$match = [regex]::Match($sumContent, '([0-9a-fA-F]{64})')
+if (-not $match.Success) {
+    throw "No valid SHA-256 hash found in SHA256SUM file."
 }
+$expected = $match.Groups[1].Value.ToLowerInvariant()
+
 $actual = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($actual -ne $expected) {
     throw "SHA-256 mismatch. Expected $expected, got $actual."

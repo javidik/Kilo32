@@ -3,24 +3,25 @@ rem Kilo32 installer entry point.
 rem Launches install.ps1 under Windows PowerShell with UTF-8 codepage so
 rem the script's English output renders correctly in any locale.
 
-setlocal
-set "PSOPTIONS=-NoLogo -NoProfile -ExecutionPolicy Bypass"
+setlocal enabledelayedexpansion
+
+rem Switch console to UTF-8 (defensive — script output is English).
+chcp 65001 >nul
 
 rem Try Windows PowerShell 5.1 first (built into Windows 10 x86 1809+).
+set "RC=0"
 where powershell.exe >nul 2>nul
 if not errorlevel 1 (
-    chcp 65001 >nul
-    powershell.exe %PSOPTIONS% -File "%~dp0install.ps1"
-    set "RC=%ERRORLEVEL%"
+    powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0install.ps1"
+    set "RC=!ERRORLEVEL!"
     goto :done
 )
 
 rem Fall back to PowerShell 7+ if available (pwsh.exe on PATH).
 where pwsh.exe >nul 2>nul
 if not errorlevel 1 (
-    chcp 65001 >nul
-    pwsh.exe %PSOPTIONS% -File "%~dp0install.ps1"
-    set "RC=%ERRORLEVEL%"
+    pwsh.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0install.ps1"
+    set "RC=!ERRORLEVEL!"
     goto :done
 )
 
@@ -33,11 +34,12 @@ pause
 exit /b 1
 
 :done
-if not "%RC%"=="0" (
+if not "!RC!"=="0" (
     echo.
-    echo Installation failed with exit code %RC%.
+    echo Installation failed with exit code !RC!.
+    echo.
     pause
-    exit /b %RC%
+    exit /b !RC!
 )
 echo.
 echo Installation complete.
